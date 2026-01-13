@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Search, Menu, User, Bell, BookOpen, Users, Star, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 // --- 서브 컴포넌트: 사이드바 ---
 const Sidebar = () => {
@@ -71,7 +72,7 @@ export default function Home() {
           <div className="flex items-center gap-8">
             <nav className="flex gap-6 font-semibold text-gray-500">
               <button className="text-indigo-600 border-b-2 border-indigo-600 pb-5 pt-5">투데이</button>
-              <button className="hover:text-gray-900 transition-colors">내 서재</button>
+              <Link href="/recordBook" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">내 서재</Link>
               <button className="hover:text-gray-900 transition-colors">독서 모임</button>
             </nav>
           </div>
