@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  profileImage  String?
+  favoriteGenres String? // JSON array of genres
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  readings      Reading[]
+  clubMembers   ClubMember[]
+  clubPosts     ClubPost[]
+  clubComments  ClubComment[]
+  chatMessages  ChatMessage[]
+
+  @@map("users")
+}
+
+// 책 정보 (알라딘 API 캐싱)
+model Book {
+  id          String   @id @default(uuid())
+  isbn        String   @unique
+  title       String
+  author      String
+  publisher   String
+  publishDate String
+  description String?  @db.Text
+  coverImage  String?
+  category    String?
+  pages       Int?
+  createdAt   DateTime @default(now())
+
+  readings    Reading[]
+  clubBooks   ClubBook[]
+
+  @@map("books")
+}
+
+// 독서 기록
+model Reading {
+  id          String        @id @default(uuid())
+  userId      String
+  bookId      String
+  status      ReadingStatus @default(WISHLIST)
+  startDate   DateTime?
+  endDate     DateTime?
+  currentPage Int?
+  rating      Int?          // 1-5
+  review      String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book          @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  notes       ReadingNote[]
+
+  @@map("readings")
+}
+
+enum ReadingStatus {
+  READING
+  COMPLETED
+  WISHLIST
+}
+
+// 독서록/메모
+model ReadingNote {
+  id        String   @id @default(uuid())
+  readingId String
+  content   String   @db.Text
+  page      Int?
+  createdAt DateTime @default(now())
+
+  reading   Reading  @relation(fields: [readingId], references: [id], onDelete: Cascade)
+
+  @@map("reading_notes")
+}
+
+// 독서 모임
+model Club {
+  id          String   @id @default(uuid())
+  name        String
+  description String   @db.Text
+  coverImage  String?
+  creatorId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     ClubMember[]
+  books       ClubBook[]
+  posts       ClubPost[]
+  schedules   ClubSchedule[]
+  chatMessages ChatMessage[]
+
+  @@map("clubs")
+}
+
+// 모임 멤버
+model ClubMember {
+  id       String         @id @default(uuid())
+  userId   String
+  clubId   String
+  role     ClubMemberRole @default(MEMBER)
+  joinedAt DateTime       @default(now())
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  club     Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clubId])
+  @@map("club_members")
+}
+
+enum ClubMemberRole {
+  OWNER
+  MEMBER
+}
+
+// 모임의 이달의/이주의 책
+model ClubBook {
+  id        String       @id @default(uuid())
+  clubId    String
+  bookId    String
+  type      ClubBookType
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime     @default(now())
+
+  club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  book      Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@map("club_books")
+}
+
+enum ClubBookType {
+  MONTHLY
+  WEEKLY
+}
+
+// 토론 게시판
+model ClubPost {
+  id        String   @id @default(uuid())
+  clubId    String
+  authorId  String
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  ClubComment[]
+
+  @@map("club_posts")
+}
+
+// 게시판 댓글
+model ClubComment {
+  id        String   @id @default(uuid())
+  postId    String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  post      ClubPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("club_comments")
+}
+
+// 모임 일정
+model ClubSchedule {
+  id          String   @id @default(uuid())
+  clubId      String
+  title       String
+  description String?  @db.Text
+  scheduledAt DateTime
+  createdAt   DateTime @default(now())
+
+  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@map("club_schedules")
+}
+
+// 채팅 메시지
+model ChatMessage {
+  id        String   @id @default(uuid())
+  clubId    String
+  userId    String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
