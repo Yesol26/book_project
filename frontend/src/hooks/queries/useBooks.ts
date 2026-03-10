@@ -2,20 +2,20 @@ import { useQuery } from '@tanstack/react-query';
 import { bookApi } from '../../lib/api/books';
 
 // 1. 베스트셀러 훅
-export const useBestsellers = (page: number = 1) => {
+export const useBestsellers = (page: number = 1, searchTarget: string = 'Book') => {
     return useQuery({
-        queryKey: ['books', 'bestseller', page],
-        queryFn: () => bookApi.getBestsellers(page),
+        queryKey: ['books', 'bestseller', page, searchTarget],
+        queryFn: () => bookApi.getBestsellers(page, 10, searchTarget),
         staleTime: 1000 * 60 * 60, // 1시간 (백엔드 캐시와 동일)
         gcTime: 1000 * 60 * 60 * 2, // 가비지 컬렉션은 2시간
     });
 };
 
 // 2. 신간 도서 훅
-export const useNewBooks = (type: 'all' | 'special', page: number = 1) => {
+export const useNewBooks = (type: 'all' | 'special', page: number = 1, searchTarget: string = 'Book') => {
     return useQuery({
-        queryKey: ['books', 'new', type, page],
-        queryFn: () => bookApi.getNewBooks(type, page),
+        queryKey: ['books', 'new', type, page, searchTarget],
+        queryFn: () => bookApi.getNewBooks(type, page, 10, searchTarget),
         staleTime: 1000 * 60 * 60, // 1시간
         gcTime: 1000 * 60 * 60 * 2, // 2시간
     });

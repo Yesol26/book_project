@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
-import { Search, Menu, User, Bell, BookOpen, Users, Star, Settings } from 'lucide-react';
+import React, { useState, KeyboardEvent } from 'react';
+import { Search, Menu, User, Bell, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // --- 서브 컴포넌트: 사이드바 ---
 const Sidebar = () => {
@@ -59,9 +60,25 @@ const BookCard = ({ title, author, category }: { title: string; author: string; 
 
 // --- 메인 홈 컴포넌트 ---
 export default function Home() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length > 0) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* 1. 사이드바 (와이어프레임 왼쪽 영역) */}
+      {/* 1. 사이드바 */}
       <Sidebar />
 
       {/* 2. 메인 영역 */}
@@ -78,11 +95,18 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-5 text-gray-500">
             <div className="relative hidden sm:block">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-indigo-500 transition-colors"
+                onClick={handleSearch}
+              />
               <input
+                id="main-search-input"
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="책 이름, 저자 검색"
-                className="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 w-64"
+                className="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 w-64 outline-none"
               />
             </div>
             <Bell className="w-6 h-6 cursor-pointer hover:text-indigo-600 transition-colors" />
@@ -95,7 +119,7 @@ export default function Home() {
         {/* 메인 콘텐츠 스크롤 영역 */}
         <div className="p-8 max-w-7xl mx-auto w-full space-y-12">
 
-          {/* 히어로 배너 (밀리의 서재 예시 반영) */}
+          {/* 히어로 배너 */}
           <section className="relative w-full h-[320px] bg-gradient-to-r from-indigo-600 to-blue-500 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200 flex items-center px-12 text-white">
             <div className="z-10 max-w-md">
               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold mb-4 inline-block backdrop-blur-sm">NEW TREND</span>
@@ -103,12 +127,14 @@ export default function Home() {
                 지금 지쳤나요?<br />독서로 회복하세요.
               </h2>
               <p className="text-indigo-100 mb-8">하루 15분, 당신의 마음을 채우는 가장 쉬운 방법</p>
-              <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">
-                지금 시작하기
-              </button>
+              <Link
+                href="/search"
+                className="inline-block px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg"
+              >
+                도서 검색하기
+              </Link>
             </div>
 
-            {/* 배너 우측 장식 (와이어프레임 x/x 표시 영역) */}
             <div className="absolute right-[-10%] bottom-[-10%] w-[500px] h-[400px] bg-white/10 rounded-full blur-3xl" />
             <div className="absolute right-12 bottom-0 w-1/3 h-[85%] bg-white/20 rounded-t-2xl backdrop-blur-md border border-white/30 hidden lg:flex items-center justify-center">
               <div className="text-white/50 text-6xl rotate-12 font-black italic">BOOK ART</div>

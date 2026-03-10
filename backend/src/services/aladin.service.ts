@@ -89,13 +89,14 @@ export class AladinApiService {
     public async getItemList(
         queryType: AladinQueryType,
         page: number = 1,
-        limit: number = 10
+        limit: number = 10,
+        searchTarget: string = 'Book'
     ): Promise<AladinListResponse> {
         const params = {
             QueryType: queryType,
             MaxResults: limit,
             start: page,
-            SearchTarget: 'Book',
+            SearchTarget: searchTarget,
         };
 
         return this.fetchWithCache<AladinListResponse>(

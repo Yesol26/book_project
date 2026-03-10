@@ -8,8 +8,9 @@ export const bookController = {
         try {
             const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+            const searchTarget = (req.query.searchTarget as string) || 'Book';
 
-            const response = await aladinApiService.getItemList('Bestseller', page, limit);
+            const response = await aladinApiService.getItemList('Bestseller', page, limit, searchTarget);
 
             const result: BookListResponse = {
                 books: response.item || [],
@@ -30,11 +31,12 @@ export const bookController = {
             const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
             const typeParam = req.query.type as string;
+            const searchTarget = (req.query.searchTarget as string) || 'Book';
 
             // type이 special이면 주목신간, 그 외는 전체 신간
             const queryType = typeParam === 'special' ? 'ItemNewSpecial' : 'ItemNewAll';
 
-            const response = await aladinApiService.getItemList(queryType, page, limit);
+            const response = await aladinApiService.getItemList(queryType, page, limit, searchTarget);
 
             const result: BookListResponse = {
                 books: response.item || [],

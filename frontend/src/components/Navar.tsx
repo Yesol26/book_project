@@ -1,19 +1,35 @@
 "use client";
 
-import React from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { BookOpen, Search, Bell, User } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // 메뉴 리스트 (이름과 이동할 경로)
   const navItems = [
     { name: '메인 홈', href: '/' },
+    { name: '도서 순위', href: '/rankings' },
+    { name: '도서 검색', href: '/search' },
     { name: '내 서재', href: '/recordBook' },
     { name: '모임 활동', href: '/groups' },
   ];
+
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length > 0) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   return (
     <nav className="h-16 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[50] px-8 flex items-center justify-between">
@@ -28,7 +44,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* 2. 메인 메뉴 (반응형: 태블릿 이상부터 표시) */}
+        {/* 2. 메인 메뉴 */}
         <div className="hidden md:flex items-center gap-8">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -36,12 +52,10 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative py-5 text-sm font-bold transition-colors ${
-                  isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'
-                }`}
+                className={`relative py-5 text-sm font-bold transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-gray-900'
+                  }`}
               >
                 {item.name}
-                {/* 현재 페이지일 때 밑줄 표시 */}
                 {isActive && (
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-full" />
                 )}
@@ -51,14 +65,21 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* 3. 우측 유틸리티 영역 (검색, 알림, 프로필) */}
+      {/* 3. 우측 유틸리티 영역 */}
       <div className="flex items-center gap-5">
         <div className="relative hidden lg:block">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
-            type="text" 
-            placeholder="책 제목, 저자 검색" 
-            className="bg-gray-100 border-none rounded-full py-1.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-indigo-500 w-48 transition-all focus:w-64"
+          <Search
+            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-indigo-500 transition-colors"
+            onClick={handleSearch}
+          />
+          <input
+            id="navbar-search-input"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="책 제목, 저자 검색"
+            className="bg-gray-100 border-none rounded-full py-1.5 pl-9 pr-4 text-xs focus:ring-2 focus:ring-indigo-500 w-48 transition-all focus:w-64 outline-none"
           />
         </div>
         <button className="text-gray-400 hover:text-indigo-600 transition-colors relative">
