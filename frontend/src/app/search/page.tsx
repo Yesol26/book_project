@@ -3,7 +3,8 @@ import BookSearch from '@/components/books/BookSearch';
 
 export default function SearchPage() {
     return (
-        <div className="min-h-screen bg-white">
+        <div className="flex-1 bg-white">
+
             <header className="py-6 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-4">
                     <h1 className="text-2xl font-bold text-gray-900">도서 검색</h1>

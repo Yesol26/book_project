@@ -1,43 +1,11 @@
 "use client";
 
 import React, { useState, KeyboardEvent } from 'react';
-import { Search, Menu, User, Bell, BookOpen } from 'lucide-react';
+import { Search, Menu } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-// --- 서브 컴포넌트: 사이드바 ---
-const Sidebar = () => {
-  const categories = [
-    "소설", "세계문학전집", "경제경영", "자기계발", "IT",
-    "외국어", "에세이", "여행", "라이프스타일", "부모", "어린이", "인문"
-  ];
-
-  return (
-    <aside className="w-64 border-r border-gray-200 h-screen sticky top-0 bg-white/50 backdrop-blur-md p-6 overflow-y-auto hidden md:block">
-      <div className="flex items-center gap-2 mb-10">
-        <div className="bg-indigo-600 p-1.5 rounded-lg">
-          <BookOpen className="w-6 h-6 text-white" />
-        </div>
-        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
-          독서 클럽
-        </span>
-      </div>
-
-      <nav className="space-y-8">
-        <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">분야별 카테고리</h3>
-          <ul className="space-y-2">
-            {categories.map((cat) => (
-              <li key={cat} className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-md cursor-pointer transition-all text-sm font-medium">
-                {cat}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-    </aside>
-  );
-};
+import Sidebar from '@/components/Sidebar';
+import HomeBestseller from '@/components/books/HomeBestseller';
 
 // --- 서브 컴포넌트: 도서 카드 ---
 const BookCard = ({ title, author, category }: { title: string; author: string; category?: string }) => (
@@ -77,44 +45,13 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* 1. 사이드바 */}
+    <div className="flex flex-1">
+      {/* 1. 사이드바 — 메인홈에서는 항상 열림 */}
       <Sidebar />
 
-      {/* 2. 메인 영역 */}
-      <main className="flex-1 flex flex-col">
 
-        {/* 상단 네비게이션 */}
-        <header className="h-16 border-b border-gray-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-8">
-            <nav className="flex gap-6 font-semibold text-gray-500">
-              <button className="text-indigo-600 border-b-2 border-indigo-600 pb-5 pt-5">투데이</button>
-              <Link href="/recordBook" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">내 서재</Link>
-              <button className="hover:text-gray-900 transition-colors">독서 모임</button>
-            </nav>
-          </div>
-          <div className="flex items-center gap-5 text-gray-500">
-            <div className="relative hidden sm:block">
-              <Search
-                className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-indigo-500 transition-colors"
-                onClick={handleSearch}
-              />
-              <input
-                id="main-search-input"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="책 이름, 저자 검색"
-                className="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 w-64 outline-none"
-              />
-            </div>
-            <Bell className="w-6 h-6 cursor-pointer hover:text-indigo-600 transition-colors" />
-            <div className="w-9 h-9 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white cursor-pointer shadow-md">
-              <User className="w-5 h-5" />
-            </div>
-          </div>
-        </header>
+      {/* 2. 메인 콘텐츠 영역 */}
+      <main className="flex-1 flex flex-col overflow-x-hidden">
 
         {/* 메인 콘텐츠 스크롤 영역 */}
         <div className="p-8 max-w-7xl mx-auto w-full space-y-12">
@@ -173,6 +110,11 @@ export default function Home() {
               ))}
             </div>
           </section>
+
+          {/* 베스트셀러 순위 섹션 */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+            <HomeBestseller />
+          </div>
 
         </div>
       </main>

@@ -76,7 +76,7 @@ function RankingsContent() {
     const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="flex-1 bg-[#F8FAFC]">
             <div className="max-w-3xl mx-auto px-4 py-8">
 
                 {/* 페이지 헤더 */}
@@ -92,8 +92,8 @@ function RankingsContent() {
                             key={tab.id}
                             onClick={() => handleTabChange(tab.id)}
                             className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             {tab.label}
@@ -147,7 +147,7 @@ function RankingsContent() {
 export default function RankingsPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+            <div className="flex-1 bg-[#F8FAFC] flex items-center justify-center">
                 <div className="w-8 h-8 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
             </div>
         }>

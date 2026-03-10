@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AladinBook } from '../../../../types/aladin';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { getHighQualityCover } from '@/lib/utils/image';
 
 interface RankingCardProps {
     book: AladinBook;
@@ -29,6 +30,7 @@ function RankChange({ rank }: { rank: number }) {
 
 export default function RankingCard({ book, rank }: RankingCardProps) {
     const rankStyle = getRankStyle(rank);
+    const coverUrl = getHighQualityCover(book.cover);
 
     return (
         <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md hover:border-indigo-100 transition-all group">
@@ -39,17 +41,20 @@ export default function RankingCard({ book, rank }: RankingCardProps) {
 
             {/* 책 표지 */}
             <Link href={book.link} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
-                <div className="relative w-12 h-16 bg-gray-100 rounded-md overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
-                    {book.cover ? (
+                <div
+                    className="relative w-12 h-16 overflow-hidden rounded-r-sm group-hover:scale-105 transition-transform duration-200"
+                    style={{ boxShadow: '-3px 3px 8px rgba(0,0,0,0.22)' }}
+                >
+                    {coverUrl ? (
                         <Image
-                            src={book.cover}
+                            src={coverUrl}
                             alt={book.title}
                             fill
                             className="object-cover"
                             sizes="48px"
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">No img</div>
+                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px] bg-gray-100">No img</div>
                     )}
                 </div>
             </Link>

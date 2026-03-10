@@ -1,35 +1,51 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { AladinBook } from '../../../../types/aladin';
+import { getHighQualityCover } from '@/lib/utils/image';
 
 interface BookCardProps {
     book: AladinBook;
 }
 
 export default function BookCard({ book }: BookCardProps) {
+    const coverUrl = getHighQualityCover(book.cover);
+
     return (
-        <div className="flex flex-col bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            <div className="relative w-full aspect-[3/4] bg-gray-100 flex items-center justify-center p-4">
-                {book.cover ? (
-                    <Image
-                        src={book.cover}
-                        alt={book.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                ) : (
-                    <div className="text-gray-400 text-sm">No Image</div>
-                )}
+        <div className="group cursor-pointer flex flex-col">
+            {/* 표지 — 책 모양 CSS */}
+            <div className="relative w-full aspect-[3/4] mb-2.5">
+                <div
+                    className="w-full h-full rounded-r-md overflow-hidden transition-transform duration-300 group-hover:scale-105 group-hover:-translate-y-1"
+                    style={{
+                        boxShadow: '-4px 4px 12px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)',
+                    }}
+                >
+                    {coverUrl ? (
+                        <Image
+                            src={coverUrl}
+                            alt={book.title}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-300 text-xs italic">
+                            No Image
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className="p-4 flex flex-col flex-grow">
-                <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-1" title={book.title}>
+
+            {/* 정보 */}
+            <div className="space-y-0.5 px-0.5">
+                <h3
+                    className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors"
+                    title={book.title}
+                >
                     {book.title}
                 </h3>
-                <p className="text-xs text-gray-600 line-clamp-1 mb-2">{book.author}</p>
-
-                <div className="mt-auto pt-2 flex items-center justify-between">
-                    <span className="font-semibold text-blue-600">
+                <p className="text-xs text-gray-500 line-clamp-1">{book.author}</p>
+                <div className="flex items-center gap-2 pt-0.5">
+                    <span className="text-sm font-bold text-gray-900">
                         {book.priceSales ? book.priceSales.toLocaleString() : 0}원
                     </span>
                     {book.priceStandard > book.priceSales && (
@@ -38,14 +54,6 @@ export default function BookCard({ book }: BookCardProps) {
                         </span>
                     )}
                 </div>
-                <Link
-                    href={book.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 w-full text-center py-2 px-4 border border-transparent text-xs font-semibold rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                >
-                    알라딘에서 보기
-                </Link>
             </div>
         </div>
     );

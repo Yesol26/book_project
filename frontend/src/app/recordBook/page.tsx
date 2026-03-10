@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
-// Navbar 컴포넌트 임포트 (경로가 맞는지 꼭 확인하세요!)
-import Navbar from '@/components/Navar';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import Sidebar from '@/components/Sidebar';
 
 // --- 가짜 데이터 (Statistics) ---
 const monthlyData = [
@@ -15,7 +14,7 @@ const monthlyData = [
 // --- 1. 독서 잔디밭 컴포넌트 ---
 const ReadingGrass = () => {
   const grassData = Array.from({ length: 150 }, () => Math.floor(Math.random() * 4));
-  
+
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
       <div className="flex items-center justify-between mb-4">
@@ -28,11 +27,10 @@ const ReadingGrass = () => {
         {grassData.map((level, i) => (
           <div
             key={i}
-            className={`w-3 h-3 rounded-[2px] ${
-              level === 0 ? 'bg-gray-100' : 
-              level === 1 ? 'bg-indigo-200' : 
-              level === 2 ? 'bg-indigo-400' : 'bg-indigo-600'
-            }`}
+            className={`w-3 h-3 rounded-[2px] ${level === 0 ? 'bg-gray-100' :
+              level === 1 ? 'bg-indigo-200' :
+                level === 2 ? 'bg-indigo-400' : 'bg-indigo-600'
+              }`}
             title={`Level ${level}`}
           />
         ))}
@@ -74,10 +72,12 @@ const MyBookCard = ({ title, author, rating }: { title: string; author: string; 
 // --- 메인 서재 페이지 컴포넌트 ---
 export default function MyLibrary() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      {/* 상단 바 추가 */}
-      <Navbar />
+    <div className="flex flex-1">
+      {/* 사이드바 — 접기/펼치기 가능, 기본 닫힘 */}
+      <Sidebar />
 
+
+      {/* 콘텐츠 영역 */}
       <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-8">
         {/* 상단 프로필 헤더 */}
         <header className="flex items-center justify-between mb-10">
@@ -91,7 +91,7 @@ export default function MyLibrary() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 왼쪽: 현재 읽고 있는 책 (세로 바) */}
+          {/* 왼쪽: 현재 읽고 있는 책 */}
           <section className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
             <h3 className="font-bold text-gray-800 mb-6 flex items-center justify-between">
               현재 읽고 있는 책
@@ -128,9 +128,9 @@ export default function MyLibrary() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={monthlyData}>
                       <XAxis dataKey="month" fontSize={10} axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        cursor={{fill: '#F3F4F6'}} 
-                        contentStyle={{borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
+                      <Tooltip
+                        cursor={{ fill: '#F3F4F6' }}
+                        contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
                       <Bar dataKey="count" fill="#4F46E5" radius={[4, 4, 0, 0]} barSize={20} />
                     </BarChart>

@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { 
-  Users, Search, Plus, Calendar, MessageSquare, 
-  MessageCircle, BookOpen, ChevronRight, Hash 
+import {
+  Users, Search, Plus, Calendar, MessageSquare,
+  MessageCircle, BookOpen, ChevronRight, Hash
 } from 'lucide-react';
-import Navbar from '@/components/Navar';
+import Sidebar from '@/components/Sidebar';
+
 // --- 가짜 데이터 (모임 목록) ---
 const myGroups = [
   { id: 1, name: '백석독모회', nextMeeting: '2024-01-20', newMessages: 3 },
@@ -21,9 +22,12 @@ export default function GroupsPage() {
   const [activeTab, setActiveTab] = useState('recruiting');
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      <Navbar />
+    <div className="flex flex-1">
+      {/* 사이드바 — 접기/펼치기 가능, 기본 닫힘 */}
+      <Sidebar />
 
+
+      {/* 콘텐츠 영역 */}
       <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-8">
         {/* 상단 헤더: 모임 생성 및 검색 */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -34,10 +38,10 @@ export default function GroupsPage() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="관심 있는 모임 검색" 
-                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 w-64 shadow-sm"
+              <input
+                type="text"
+                placeholder="관심 있는 모임 검색"
+                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 w-64 shadow-sm outline-none"
               />
             </div>
             <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
@@ -47,7 +51,7 @@ export default function GroupsPage() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* 좌측: 나의 독서모임 & 캘린더 (와이어프레임 좌측 사이드바) */}
+          {/* 좌측: 나의 독서모임 & 캘린더 */}
           <aside className="lg:col-span-1 space-y-6">
             <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -77,10 +81,9 @@ export default function GroupsPage() {
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-1 text-center text-[10px] mb-2 font-medium text-gray-400">
-                {['일','월','화','수','목','금','토'].map(d => <div key={d}>{d}</div>)}
+                {['일', '월', '화', '수', '목', '금', '토'].map(d => <div key={d}>{d}</div>)}
               </div>
               <div className="grid grid-cols-7 gap-1 text-center">
-                {/* 간이 날짜 표시 루프 */}
                 {Array.from({ length: 31 }).map((_, i) => (
                   <div key={i} className={`py-1 text-[11px] rounded-md transition-colors cursor-pointer ${i + 1 === 17 ? 'bg-indigo-600 text-white font-bold' : 'hover:bg-gray-100 text-gray-600'}`}>
                     {i + 1}
@@ -93,17 +96,17 @@ export default function GroupsPage() {
             </section>
           </aside>
 
-          {/* 중앙/우측: 모임 탐색 및 상세 섹션 (와이어프레임 메인 영역) */}
+          {/* 중앙/우측: 모임 탐색 및 상세 섹션 */}
           <section className="lg:col-span-3 space-y-8">
             {/* 탭 메뉴 */}
             <div className="flex gap-6 border-b border-gray-100">
-              <button 
+              <button
                 onClick={() => setActiveTab('recruiting')}
                 className={`pb-4 text-sm font-bold transition-all ${activeTab === 'recruiting' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400'}`}
               >
                 독서 모임 모집중
               </button>
-              <button 
+              <button
                 onClick={() => setActiveTab('active')}
                 className={`pb-4 text-sm font-bold transition-all ${activeTab === 'active' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400'}`}
               >
@@ -111,7 +114,7 @@ export default function GroupsPage() {
               </button>
             </div>
 
-            {/* 모임 카드 리스트 (와이어프레임 중앙 리스트 영역) */}
+            {/* 모임 카드 리스트 */}
             <div className="space-y-4">
               {trendingGroups.map(group => (
                 <div key={group.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
@@ -122,8 +125,6 @@ export default function GroupsPage() {
                         <h4 className="font-bold text-gray-900">{group.name}</h4>
                       </div>
                       <p className="text-sm text-gray-500 line-clamp-2">{group.description}</p>
-                      
-                      {/* 모임 정보 태그 */}
                       <div className="flex flex-wrap gap-4 pt-2">
                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
                           <BookOpen className="w-3.5 h-3.5" /> 이달의 책: <span className="font-medium text-gray-700 text-xs">불편한 편의점</span>
@@ -136,7 +137,6 @@ export default function GroupsPage() {
                         </div>
                       </div>
                     </div>
-                    
                     <div className="flex md:flex-col gap-2 justify-center">
                       <button className="flex-1 md:flex-none px-6 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-colors">
                         참여 신청
@@ -150,7 +150,7 @@ export default function GroupsPage() {
               ))}
             </div>
 
-            {/* 기능 프리뷰 섹션 (토론 게시판 / 실시간 채팅) */}
+            {/* 기능 프리뷰 섹션 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-100 relative overflow-hidden group">
                 <div className="relative z-10">
@@ -164,14 +164,14 @@ export default function GroupsPage() {
                 </div>
                 <MessageCircle className="absolute -right-4 -bottom-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform" />
               </div>
-              
+
               <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
                   <h4 className="font-bold text-gray-800 mb-1">실시간 채팅</h4>
                   <p className="text-gray-400 text-xs">모임원들과 실시간으로 소통하세요.</p>
                 </div>
                 <div className="flex -space-x-2">
-                  {[1,2,3].map(i => (
+                  {[1, 2, 3].map(i => (
                     <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-500">
                       U{i}
                     </div>
