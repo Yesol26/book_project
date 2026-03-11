@@ -114,13 +114,15 @@ export class AladinApiService {
     public async searchBooks(
         query: string,
         page: number = 1,
-        limit: number = 10
+        limit: number = 10,
+        categoryId?: number
     ): Promise<AladinSearchResponse> {
-        const params = {
+        const params: Record<string, any> = {
             Query: query,
             MaxResults: limit,
             start: page,
             SearchTarget: 'Book',
+            ...(categoryId ? { CategoryId: categoryId } : {}),
         };
 
         return this.fetchWithCache<AladinSearchResponse>(

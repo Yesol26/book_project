@@ -15,8 +15,10 @@ export const bookApi = {
     },
 
     // 검색
-    searchBooks: async (query: string, page: number = 1, limit: number = 10): Promise<BookListResponse> => {
-        const { data } = await apiClient.get<BookListResponse>('/books/search', { params: { q: query, page, limit } });
+    searchBooks: async (query: string, page: number = 1, limit: number = 10, categoryId?: number): Promise<BookListResponse> => {
+        const { data } = await apiClient.get<BookListResponse>('/books/search', {
+            params: { q: query, page, limit, ...(categoryId ? { categoryId } : {}) },
+        });
         return data;
     },
 

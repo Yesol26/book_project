@@ -28,8 +28,8 @@ function SkeletonCard() {
 export default function BookList({ books, isLoading, page, totalPages, total, onPageChange }: BookListProps) {
     if (isLoading) {
         return (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-5">
-                {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4">
+                {Array.from({ length: 21 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
         );
     }
@@ -53,7 +53,7 @@ export default function BookList({ books, isLoading, page, totalPages, total, on
             )}
 
             {/* 그리드 */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-5">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-4">
                 {books.map((book) => (
                     <BookCard key={book.itemId} book={book} />
                 ))}
@@ -77,8 +77,8 @@ export default function BookList({ books, isLoading, page, totalPages, total, on
                                 key={pageNum}
                                 onClick={() => onPageChange(pageNum)}
                                 className={`w-9 h-9 rounded-full text-sm font-semibold transition-colors ${page === pageNum
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'text-gray-500 hover:bg-gray-100'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-500 hover:bg-gray-100'
                                     }`}
                             >
                                 {pageNum}

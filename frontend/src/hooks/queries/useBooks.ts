@@ -22,10 +22,10 @@ export const useNewBooks = (type: 'all' | 'special', page: number = 1, searchTar
 };
 
 // 3. 도서 검색 훅 (검색어 입력 중에는 호출하지 않고 debounce 쿼리와 함께 사용됨)
-export const useBookSearch = (query: string, page: number = 1) => {
+export const useBookSearch = (query: string, page: number = 1, categoryId?: number) => {
     return useQuery({
-        queryKey: ['books', 'search', query, page],
-        queryFn: () => bookApi.searchBooks(query, page),
+        queryKey: ['books', 'search', query, page, categoryId],
+        queryFn: () => bookApi.searchBooks(query, page, 28, categoryId), // 7열 × 4줄
         // 쿼리가 빈 문자열이 아닐 때만 API를 호출하도록 방어
         enabled: !!query && query.trim().length > 0,
         staleTime: 1000 * 60 * 10, // 10분

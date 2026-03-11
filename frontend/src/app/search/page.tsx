@@ -11,7 +11,7 @@ export default function SearchPage() {
                 </div>
             </header>
 
-            <main className="px-4">
+            <main className="max-w-7xl mx-auto px-4">
                 {/* useSearchParams를 사용하는 클라이언트 컴포넌트는 Suspense로 감싸야 함 */}
                 <Suspense fallback={<div className="py-20 text-center animate-pulse">검색 모듈을 불러오는 중...</div>}>
                     <BookSearch />

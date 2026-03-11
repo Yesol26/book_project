@@ -25,7 +25,7 @@ export default function BookCard({ book }: BookCardProps) {
                             alt={book.title}
                             fill
                             className="object-cover"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                            sizes="(max-width: 640px) 28vw, (max-width: 768px) 22vw, (max-width: 1024px) 18vw, 168px"
                         />
                     ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-300 text-xs italic">

@@ -57,13 +57,16 @@ export const bookController = {
             const q = req.query.q as string;
             const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+            const categoryId = req.query.categoryId
+                ? parseInt(req.query.categoryId as string, 10)
+                : undefined;
 
             if (!q) {
                 res.status(400).json({ message: '검색어(q) 파라미터가 필요합니다.' });
                 return;
             }
 
-            const response = await aladinApiService.searchBooks(q, page, limit);
+            const response = await aladinApiService.searchBooks(q, page, limit, categoryId);
 
             const result: BookListResponse = {
                 books: response.item || [],
