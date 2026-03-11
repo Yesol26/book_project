@@ -1,4 +1,5 @@
 import { QueryProvider } from '@/providers/QueryProvider';
+import Navbar from '@/components/Navar';
 import type { Metadata } from 'next';
 import './globals.css';
 
@@ -14,8 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>
+      <body className="flex flex-col min-h-screen bg-[#F8FAFC]">
         <QueryProvider>
+          <Navbar />
           {children}
         </QueryProvider>
       </body>

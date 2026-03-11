@@ -2,9 +2,8 @@
 
 import React from 'react';
 import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
-// Navbar 컴포넌트 임포트 (경로가 맞는지 꼭 확인하세요!)
-import Navbar from '@/components/Navar';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import Sidebar from '@/components/Sidebar';
 
 // --- 가짜 데이터 (Statistics) ---
 const monthlyData = [
@@ -15,7 +14,7 @@ const monthlyData = [
 // --- 1. 독서 잔디밭 컴포넌트 ---
 const ReadingGrass = () => {
   const grassData = Array.from({ length: 150 }, () => Math.floor(Math.random() * 4));
-  
+
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
       <div className="flex items-center justify-between mb-4">
@@ -28,11 +27,10 @@ const ReadingGrass = () => {
         {grassData.map((level, i) => (
           <div
             key={i}
-            className={`w-3 h-3 rounded-[2px] ${
-              level === 0 ? 'bg-gray-100' : 
-              level === 1 ? 'bg-indigo-200' : 
-              level === 2 ? 'bg-indigo-400' : 'bg-indigo-600'
-            }`}
+            className={`w-3 h-3 rounded-[2px] ${level === 0 ? 'bg-gray-100' :
+              level === 1 ? 'bg-indigo-200' :
+                level === 2 ? 'bg-indigo-400' : 'bg-indigo-600'
+              }`}
             title={`Level ${level}`}
           />
         ))}
@@ -50,18 +48,23 @@ const ReadingGrass = () => {
   );
 };
 
-// --- 2. 도서 카드 컴포넌트 ---
+// --- 2. 도서 카드 컴포넌트 (5순위: 별점 보라색으로 통일) ---
 const MyBookCard = ({ title, author, rating }: { title: string; author: string; rating: number }) => (
   <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-    <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-3 flex items-center justify-center text-gray-400 relative overflow-hidden group">
+    {/* [6순위] 책 모양 효과: BookCard/HomeBestseller와 동일한 스타일 */}
+    <div
+      className="aspect-[3/4] bg-gray-100 rounded-r-md mb-3 flex items-center justify-center text-gray-400 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1"
+      style={{ boxShadow: '-3px 4px 12px rgba(0,0,0,0.25)' }}
+    >
       Book Cover
     </div>
     <div className="space-y-1">
       <h4 className="text-sm font-bold text-gray-900 truncate">{title}</h4>
       <p className="text-xs text-gray-500">{author}</p>
+      {/* [5순위 수정] 노란색 → 보라색(indigo) 별점 */}
       <div className="flex items-center gap-1 pt-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Star key={i} className={`w-3 h-3 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+          <Star key={i} className={`w-3 h-3 ${i < rating ? 'fill-indigo-500 text-indigo-500' : 'text-gray-200'}`} />
         ))}
       </div>
       <button className="w-full mt-3 py-2 bg-gray-50 hover:bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-lg transition-colors border border-indigo-100">
@@ -74,10 +77,11 @@ const MyBookCard = ({ title, author, rating }: { title: string; author: string; 
 // --- 메인 서재 페이지 컴포넌트 ---
 export default function MyLibrary() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      {/* 상단 바 추가 */}
-      <Navbar />
+    <div className="flex flex-1">
+      {/* 사이드바 */}
+      <Sidebar />
 
+      {/* 콘텐츠 영역 */}
       <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-8">
         {/* 상단 프로필 헤더 */}
         <header className="flex items-center justify-between mb-10">
@@ -90,71 +94,88 @@ export default function MyLibrary() {
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 왼쪽: 현재 읽고 있는 책 (세로 바) */}
-          <section className="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
+        {/* ─── [4순위 수정] 레이아웃 재배치 ───
+            Before: grid-cols-3 (나란히 3열, 높이 불균형)
+            After:  상단 grid-cols-2 (현재읽는책 + 월별통계, min-h 통일)
+                    하단 w-full (잔디밭 전체 너비)
+        */}
+
+        {/* 상단 2열: 현재 읽는 책 + 월별 독서 통계 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* 현재 읽고 있는 책 */}
+          <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[320px] flex flex-col">
             <h3 className="font-bold text-gray-800 mb-6 flex items-center justify-between">
               현재 읽고 있는 책
               <ChevronRight className="w-4 h-4 text-gray-400" />
             </h3>
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-4">
-                  <div className="w-16 h-24 bg-gray-100 rounded-lg flex-shrink-0" />
-                  <div className="flex flex-col justify-center flex-1">
-                    <p className="text-[10px] font-bold text-indigo-600 mb-1">독서중 (65%)</p>
-                    <h4 className="text-sm font-bold text-gray-900 mb-1 line-clamp-1">불편한 편의점</h4>
-                    <div className="w-full bg-gray-100 h-1.5 rounded-full mt-1">
-                      <div className="bg-indigo-500 h-full rounded-full w-[65%]" />
+            {/* 최대 3권만 표시 + 진행률 바 + 더보기 */}
+            <div className="space-y-5 flex-1">
+              {[
+                { title: '불편한 편의점', progress: 65 },
+                { title: '파친코', progress: 32 },
+                { title: '세이노의 가르침', progress: 80 },
+              ].map((book, i) => (
+                <div key={i} className="flex gap-4 items-center">
+                  <div
+                    className="w-12 h-16 flex-shrink-0 bg-gray-100 overflow-hidden rounded-r-sm"
+                    style={{ boxShadow: '-2px 3px 8px rgba(0,0,0,0.15)' }}
+                  />
+                  <div className="flex flex-col justify-center flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-indigo-600 mb-1">독서중 ({book.progress}%)</p>
+                    <h4 className="text-sm font-bold text-gray-900 mb-2 line-clamp-1">{book.title}</h4>
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full">
+                      <div
+                        className="bg-indigo-500 h-full rounded-full transition-all"
+                        style={{ width: `${book.progress}%` }}
+                      />
                     </div>
                   </div>
                 </div>
               ))}
-              <button className="w-full py-3 bg-gray-50 text-gray-500 text-sm font-medium rounded-xl hover:bg-gray-100 transition-colors">
-                더보기
-              </button>
             </div>
+            <button className="mt-5 w-full py-2.5 bg-gray-50 text-gray-500 text-sm font-medium rounded-xl hover:bg-gray-100 transition-colors">
+              더보기
+            </button>
           </section>
 
-          {/* 오른쪽: 통계 및 잔디밭 */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* 통계 차트 영역 */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-indigo-600" /> 월별 독서 통계
-                </h3>
-                <div className="h-40 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyData}>
-                      <XAxis dataKey="month" fontSize={10} axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        cursor={{fill: '#F3F4F6'}} 
-                        contentStyle={{borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} 
-                      />
-                      <Bar dataKey="count" fill="#4F46E5" radius={[4, 4, 0, 0]} barSize={20} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              <ReadingGrass />
+          {/* 월별 독서 통계 */}
+          <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm min-h-[320px] flex flex-col">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-indigo-600" /> 월별 독서 통계
+            </h3>
+            <div className="flex-1 w-full min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyData}>
+                  <XAxis dataKey="month" fontSize={10} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    cursor={{ fill: '#F3F4F6' }}
+                    contentStyle={{ borderRadius: '10px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Bar dataKey="count" fill="#4F46E5" radius={[4, 4, 0, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-
-            {/* 하단: 독서 기록함 / 위시리스트 탭 */}
-            <section>
-              <div className="flex gap-6 border-b border-gray-100 mb-6">
-                <button className="pb-4 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">독서 기록함</button>
-                <button className="pb-4 text-sm font-medium text-gray-400 hover:text-gray-600">위시리스트</button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                <MyBookCard title="가재가 노래하는 곳" author="델리아 오언" rating={5} />
-                <MyBookCard title="물고기는 존재하지 않는다" author="룰루 밀러" rating={4} />
-                <MyBookCard title="미드나잇 라이브러리" author="매트 헤이그" rating={5} />
-                <MyBookCard title="지구 끝의 온기" author="김초엽" rating={4} />
-              </div>
-            </section>
-          </div>
+          </section>
         </div>
+
+        {/* 하단: 독서 잔디밭 — 전체 너비 */}
+        <ReadingGrass />
+
+        {/* 하단: 독서 기록함 / 위시리스트 탭 */}
+        <section>
+          <div className="flex gap-6 border-b border-gray-100 mb-6">
+            <button className="pb-4 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">독서 기록함</button>
+            <button className="pb-4 text-sm font-medium text-gray-400 hover:text-gray-600">위시리스트</button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            <MyBookCard title="가재가 노래하는 곳" author="델리아 오언" rating={5} />
+            <MyBookCard title="물고기는 존재하지 않는다" author="룰루 밀러" rating={4} />
+            <MyBookCard title="미드나잇 라이브러리" author="매트 헤이그" rating={5} />
+            <MyBookCard title="지구 끝의 온기" author="김초엽" rating={4} />
+          </div>
+        </section>
+
       </main>
     </div>
   );

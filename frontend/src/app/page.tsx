@@ -1,101 +1,137 @@
 "use client";
 
-import React from 'react';
-import { Search, Menu, User, Bell, BookOpen, Users, Star, Settings } from 'lucide-react';
+import React, { useState, KeyboardEvent } from 'react';
+import Image from 'next/image';
+import { Search, Menu, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
+import HomeBestseller from '@/components/books/HomeBestseller';
+import { useBestsellers } from '@/hooks/queries/useBooks';
+import { getHighQualityCover } from '@/lib/utils/image';
+import { AladinBook } from '../../../types/aladin';
 
-// --- 서브 컴포넌트: 사이드바 ---
-const Sidebar = () => {
-  const categories = [
-    "소설", "세계문학전집", "경제경영", "자기계발", "IT", 
-    "외국어", "에세이", "여행", "라이프스타일", "부모", "어린이", "인문"
-  ];
-
+// --- 서브 컴포넌트: 도서 카드 (실제 API 데이터) ---
+const BookCard = ({ book, category }: { book: AladinBook; category?: string }) => {
+  const coverUrl = getHighQualityCover(book.cover);
   return (
-    <aside className="w-64 border-r border-gray-200 h-screen sticky top-0 bg-white/50 backdrop-blur-md p-6 overflow-y-auto hidden md:block">
-      <div className="flex items-center gap-2 mb-10">
-        <div className="bg-indigo-600 p-1.5 rounded-lg">
-          <BookOpen className="w-6 h-6 text-white" />
-        </div>
-        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
-          독서 클럽
-        </span>
+    <div className="w-[160px] flex-shrink-0 group cursor-pointer">
+      <div
+        className="relative aspect-[3/4] mb-3 overflow-hidden rounded-r-md group-hover:-translate-y-1 transition-all duration-300"
+        style={{ boxShadow: '-4px 4px 12px rgba(0,0,0,0.22)' }}
+      >
+        {coverUrl ? (
+          <Image
+            src={coverUrl}
+            alt={book.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="160px"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 italic text-xs p-4 text-center">
+            {book.title}
+          </div>
+        )}
+        {category && (
+          <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] px-2 py-1 rounded-full font-bold text-indigo-600">
+            {category}
+          </span>
+        )}
       </div>
-      
-      <nav className="space-y-8">
-        <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">분야별 카테고리</h3>
-          <ul className="space-y-2">
-            {categories.map((cat) => (
-              <li key={cat} className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-md cursor-pointer transition-all text-sm font-medium">
-                {cat}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-    </aside>
+      <h4 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{book.title}</h4>
+      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{book.author}</p>
+    </div>
   );
 };
 
-// --- 서브 컴포넌트: 도서 카드 ---
-const BookCard = ({ title, author, category }: { title: string; author: string; category?: string }) => (
-  <div className="min-w-[160px] group cursor-pointer">
-    <div className="relative aspect-[3/4] bg-white rounded-xl mb-3 shadow-sm group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 border border-gray-100 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-      <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 italic text-xs p-4 text-center">
-        {title}
-      </div>
-      {category && (
-        <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] px-2 py-1 rounded-full font-bold text-indigo-600">
-          {category}
-        </span>
-      )}
-    </div>
-    <h4 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{title}</h4>
-    <p className="text-xs text-gray-500 mt-1">{author}</p>
+// --- 서브 컴포넌트: 도서 카드 스켈레톤 ---
+const BookCardSkeleton = () => (
+  <div className="w-[160px] flex-shrink-0 animate-pulse">
+    <div className="aspect-[3/4] bg-gray-200 rounded-r-md mb-3" style={{ boxShadow: '-4px 4px 12px rgba(0,0,0,0.08)' }} />
+    <div className="h-3.5 bg-gray-200 rounded w-4/5 mb-2" />
+    <div className="h-3 bg-gray-100 rounded w-3/5" />
   </div>
 );
 
+// --- 서브 컴포넌트: 히어로 배너 책 3권 ---
+const HeroBookStack = ({ books }: { books: AladinBook[] }) => {
+  const rotates = ['-8deg', '0deg', '8deg'];
+  const zIndexes = [10, 20, 10];
+
+  return (
+    <div className="absolute right-12 bottom-0 h-[85%] hidden lg:flex items-end justify-center gap-[-16px]">
+      {books.slice(0, 3).map((book, i) => {
+        const coverUrl = getHighQualityCover(book.cover);
+        return (
+          <Link
+            key={book.itemId}
+            href={book.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative w-[110px] h-[160px] flex-shrink-0 -mx-3 hover:scale-105 transition-transform duration-300"
+            style={{
+              transform: `rotate(${rotates[i]})`,
+              zIndex: zIndexes[i],
+            }}
+          >
+            <div
+              className="w-full h-full overflow-hidden rounded-r-md"
+              style={{ boxShadow: '-4px 4px 14px rgba(0,0,0,0.35)' }}
+            >
+              {coverUrl ? (
+                <Image
+                  src={coverUrl}
+                  alt={book.title}
+                  fill
+                  className="object-cover"
+                  sizes="110px"
+                />
+              ) : (
+                <div className="w-full h-full bg-white/20 flex items-center justify-center text-white/60 text-xs p-2 text-center" />
+              )}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
+
 // --- 메인 홈 컴포넌트 ---
 export default function Home() {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // 베스트셀러 훅 — 히어로 배너 + "내가 읽고 있는 책" 공용
+  const { data: bestsellers, isLoading } = useBestsellers(1, 'Book');
+  const books = bestsellers?.books ?? [];
+
+  const handleSearch = () => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length > 0) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      {/* 1. 사이드바 (와이어프레임 왼쪽 영역) */}
+    <div className="flex flex-1">
+      {/* 1. 사이드바 — 메인홈에서는 항상 열림 */}
       <Sidebar />
 
-      {/* 2. 메인 영역 */}
-      <main className="flex-1 flex flex-col">
-        
-        {/* 상단 네비게이션 */}
-        <header className="h-16 border-b border-gray-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-8">
-            <nav className="flex gap-6 font-semibold text-gray-500">
-              <button className="text-indigo-600 border-b-2 border-indigo-600 pb-5 pt-5">투데이</button>
-              <Link href="/recordBook" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">내 서재</Link>
-              <button className="hover:text-gray-900 transition-colors">독서 모임</button>
-            </nav>
-          </div>
-          <div className="flex items-center gap-5 text-gray-500">
-            <div className="relative hidden sm:block">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="책 이름, 저자 검색" 
-                className="bg-gray-100 border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-indigo-500 w-64"
-              />
-            </div>
-            <Bell className="w-6 h-6 cursor-pointer hover:text-indigo-600 transition-colors" />
-            <div className="w-9 h-9 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white cursor-pointer shadow-md">
-              <User className="w-5 h-5" />
-            </div>
-          </div>
-        </header>
+      {/* 2. 메인 콘텐츠 영역 */}
+      <main className="flex-1 flex flex-col overflow-x-hidden">
 
         {/* 메인 콘텐츠 스크롤 영역 */}
         <div className="p-8 max-w-7xl mx-auto w-full space-y-12">
-          
-          {/* 히어로 배너 (밀리의 서재 예시 반영) */}
+
+          {/* 히어로 배너 */}
           <section className="relative w-full h-[320px] bg-gradient-to-r from-indigo-600 to-blue-500 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200 flex items-center px-12 text-white">
             <div className="z-10 max-w-md">
               <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold mb-4 inline-block backdrop-blur-sm">NEW TREND</span>
@@ -103,50 +139,75 @@ export default function Home() {
                 지금 지쳤나요?<br />독서로 회복하세요.
               </h2>
               <p className="text-indigo-100 mb-8">하루 15분, 당신의 마음을 채우는 가장 쉬운 방법</p>
-              <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">
-                지금 시작하기
-              </button>
+              <Link
+                href="/search"
+                className="inline-block px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg"
+              >
+                도서 검색하기
+              </Link>
             </div>
-            
-            {/* 배너 우측 장식 (와이어프레임 x/x 표시 영역) */}
+
+            {/* 배경 블러 오브 */}
             <div className="absolute right-[-10%] bottom-[-10%] w-[500px] h-[400px] bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute right-12 bottom-0 w-1/3 h-[85%] bg-white/20 rounded-t-2xl backdrop-blur-md border border-white/30 hidden lg:flex items-center justify-center">
-               <div className="text-white/50 text-6xl rotate-12 font-black italic">BOOK ART</div>
-               <div className="absolute bottom-4 right-4 bg-black/30 px-3 py-1 rounded-full text-xs font-mono">01 / 03</div>
-            </div>
+
+            {/* 히어로 배너 — 베스트셀러 책 3권 비스듬히 */}
+            {books.length >= 3 && <HeroBookStack books={books} />}
           </section>
 
-          {/* 도서 섹션 1: 내가 읽고 있는 책 */}
+          {/* 도서 섹션 1: 내가 읽고 있는 책 → useBestsellers 연결 */}
           <section>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-indigo-600 rounded-full" />
-                내가 읽고 있는 책
+                지금 인기있는 책
               </h3>
-              <button className="text-sm text-indigo-600 font-medium">전체보기</button>
+              <Link href="/rankings" className="flex items-center gap-1 text-sm text-indigo-600 font-medium hover:underline">
+                전체보기 <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
             <div className="flex gap-6 overflow-x-auto pb-6 no-scrollbar">
-              <BookCard title="마흔에 읽는 쇼펜하우어" author="강용수" category="인문" />
-              <BookCard title="세이노의 가르침" author="세이노" category="자기계발" />
-              <BookCard title="모순" author="양귀자" category="소설" />
-              <BookCard title="도둑맞은 집중력" author="요한 하리" category="사회" />
+              {isLoading
+                ? Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)
+                : books.slice(0, 8).map((book) => (
+                  <BookCard
+                    key={book.itemId}
+                    book={book}
+                    category={book.categoryName?.split('>').pop()?.trim()}
+                  />
+                ))
+              }
             </div>
           </section>
 
-          {/* 도서 섹션 2: 추천 장르 */}
-          <section className="bg-indigo-50/50 -mx-8 px-8 py-12 rounded-3xl">
+          {/* 도서 섹션 2: 추천 장르 — 섹션 스타일 통일 */}
+          <section>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">당신을 위한 추천 장르</h3>
-              <div className="flex gap-2">
-                 <button className="p-2 bg-white rounded-full shadow-sm hover:bg-indigo-600 hover:text-white transition-all"><Menu className="w-4 h-4"/></button>
-              </div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-indigo-400 rounded-full" />
+                당신을 위한 추천 장르
+              </h3>
+              <Link href="/rankings" className="flex items-center gap-1 text-sm text-indigo-600 font-medium hover:underline">
+                전체보기 <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
             <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <BookCard key={i} title={`추천 도서 제목 ${i}`} author={`작가 이름 ${i}`} />
-              ))}
+              {isLoading
+                ? Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)
+                : books.slice(3, 9).map((book) => (
+                  <BookCard
+                    key={book.itemId}
+                    book={book}
+                    category={book.categoryName?.split('>').pop()?.trim()}
+                  />
+                ))
+              }
             </div>
           </section>
+
+          {/* 베스트셀러 순위 섹션 */}
+          <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+            <HomeBestseller />
+          </div>
 
         </div>
       </main>
