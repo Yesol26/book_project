@@ -1,216 +1,135 @@
 "use client";
 
-import React, { useState, KeyboardEvent } from 'react';
-import Image from 'next/image';
-import { Search, Menu, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
-import HomeBestseller from '@/components/books/HomeBestseller';
-import { useBestsellers } from '@/hooks/queries/useBooks';
-import { getHighQualityCover } from '@/lib/utils/image';
-import { AladinBook } from '../../../types/aladin';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // 1. 라우터 임포트
 
-// --- 서브 컴포넌트: 도서 카드 (실제 API 데이터) ---
-const BookCard = ({ book, category }: { book: AladinBook; category?: string }) => {
-  const coverUrl = getHighQualityCover(book.cover);
-  return (
-    <div className="w-[160px] flex-shrink-0 group cursor-pointer">
-      <div
-        className="relative aspect-[3/4] mb-3 overflow-hidden rounded-r-md group-hover:-translate-y-1 transition-all duration-300"
-        style={{ boxShadow: '-4px 4px 12px rgba(0,0,0,0.22)' }}
-      >
-        {coverUrl ? (
-          <Image
-            src={coverUrl}
-            alt={book.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="160px"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300 italic text-xs p-4 text-center">
-            {book.title}
-          </div>
-        )}
-        {category && (
-          <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[10px] px-2 py-1 rounded-full font-bold text-indigo-600">
-            {category}
-          </span>
-        )}
-      </div>
-      <h4 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{book.title}</h4>
-      <p className="text-xs text-gray-500 mt-1 line-clamp-1">{book.author}</p>
-    </div>
-  );
-};
+const AuthPage: React.FC = () => {
+  const router = useRouter(); // 2. 라우터 훅 초기화
+  const [isLogin, setIsLogin] = useState(true);
+  
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: ''
+  });
 
-// --- 서브 컴포넌트: 도서 카드 스켈레톤 ---
-const BookCardSkeleton = () => (
-  <div className="w-[160px] flex-shrink-0 animate-pulse">
-    <div className="aspect-[3/4] bg-gray-200 rounded-r-md mb-3" style={{ boxShadow: '-4px 4px 12px rgba(0,0,0,0.08)' }} />
-    <div className="h-3.5 bg-gray-200 rounded w-4/5 mb-2" />
-    <div className="h-3 bg-gray-100 rounded w-3/5" />
-  </div>
-);
-
-// --- 서브 컴포넌트: 히어로 배너 책 3권 ---
-const HeroBookStack = ({ books }: { books: AladinBook[] }) => {
-  const rotates = ['-8deg', '0deg', '8deg'];
-  const zIndexes = [10, 20, 10];
-
-  return (
-    <div className="absolute right-12 bottom-0 h-[85%] hidden lg:flex items-end justify-center gap-[-16px]">
-      {books.slice(0, 3).map((book, i) => {
-        const coverUrl = getHighQualityCover(book.cover);
-        return (
-          <Link
-            key={book.itemId}
-            href={book.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative w-[110px] h-[160px] flex-shrink-0 -mx-3 hover:scale-105 transition-transform duration-300"
-            style={{
-              transform: `rotate(${rotates[i]})`,
-              zIndex: zIndexes[i],
-            }}
-          >
-            <div
-              className="w-full h-full overflow-hidden rounded-r-md"
-              style={{ boxShadow: '-4px 4px 14px rgba(0,0,0,0.35)' }}
-            >
-              {coverUrl ? (
-                <Image
-                  src={coverUrl}
-                  alt={book.title}
-                  fill
-                  className="object-cover"
-                  sizes="110px"
-                />
-              ) : (
-                <div className="w-full h-full bg-white/20 flex items-center justify-center text-white/60 text-xs p-2 text-center" />
-              )}
-            </div>
-          </Link>
-        );
-      })}
-    </div>
-  );
-};
-
-// --- 메인 홈 컴포넌트 ---
-export default function Home() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // 베스트셀러 훅 — 히어로 배너 + "내가 읽고 있는 책" 공용
-  const { data: bestsellers, isLoading } = useBestsellers(1, 'Book');
-  const books = bestsellers?.books ?? [];
-
-  const handleSearch = () => {
-    const trimmed = searchQuery.trim();
-    if (trimmed.length > 0) {
-      router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // 백엔드 URL (Express 서버 포트에 맞게 수정하세요)
+    const baseUrl = 'http://localhost:4000/api/auth';
+    const endpoint = isLogin ? `${baseUrl}/login` : `${baseUrl}/signup`;
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        if (isLogin) {
+          // 3. 로그인 성공 시 처리
+          // 백엔드에서 준 토큰을 브라우저에 저장
+          localStorage.setItem('token', result.token);
+          
+          alert("로그인 성공!");
+          
+          // 4. 메인 페이지(main.tsx 또는 / 경로)로 이동
+          router.push('/main'); 
+        } else {
+          // 회원가입 성공 시
+          alert("회원가입이 완료되었습니다! 로그인해 주세요.");
+          setIsLogin(true); // 로그인 모드로 전환
+        }
+      } else {
+        // 백엔드에서 보낸 에러 메시지 출력
+        alert(`실패: ${result.message}`);
+      }
+    } catch (err) {
+      console.error("통신 에러:", err);
+      alert("서버와 통신 중 오류가 발생했습니다.");
     }
   };
 
   return (
-    <div className="flex flex-1">
-      {/* 1. 사이드바 — 메인홈에서는 항상 열림 */}
-      <Sidebar />
-
-      {/* 2. 메인 콘텐츠 영역 */}
-      <main className="flex-1 flex flex-col overflow-x-hidden">
-
-        {/* 메인 콘텐츠 스크롤 영역 */}
-        <div className="p-8 max-w-7xl mx-auto w-full space-y-12">
-
-          {/* 히어로 배너 */}
-          <section className="relative w-full h-[320px] bg-gradient-to-r from-indigo-600 to-blue-500 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200 flex items-center px-12 text-white">
-            <div className="z-10 max-w-md">
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold mb-4 inline-block backdrop-blur-sm">NEW TREND</span>
-              <h2 className="text-4xl font-extrabold mb-4 leading-tight">
-                지금 지쳤나요?<br />독서로 회복하세요.
-              </h2>
-              <p className="text-indigo-100 mb-8">하루 15분, 당신의 마음을 채우는 가장 쉬운 방법</p>
-              <Link
-                href="/search"
-                className="inline-block px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg"
-              >
-                도서 검색하기
-              </Link>
-            </div>
-
-            {/* 배경 블러 오브 */}
-            <div className="absolute right-[-10%] bottom-[-10%] w-[500px] h-[400px] bg-white/10 rounded-full blur-3xl" />
-
-            {/* 히어로 배너 — 베스트셀러 책 3권 비스듬히 */}
-            {books.length >= 3 && <HeroBookStack books={books} />}
-          </section>
-
-          {/* 도서 섹션 1: 내가 읽고 있는 책 → useBestsellers 연결 */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-indigo-600 rounded-full" />
-                지금 인기있는 책
-              </h3>
-              <Link href="/rankings" className="flex items-center gap-1 text-sm text-indigo-600 font-medium hover:underline">
-                전체보기 <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="flex gap-6 overflow-x-auto pb-6 no-scrollbar">
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)
-                : books.slice(0, 8).map((book) => (
-                  <BookCard
-                    key={book.itemId}
-                    book={book}
-                    category={book.categoryName?.split('>').pop()?.trim()}
-                  />
-                ))
-              }
-            </div>
-          </section>
-
-          {/* 도서 섹션 2: 추천 장르 — 섹션 스타일 통일 */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-indigo-400 rounded-full" />
-                당신을 위한 추천 장르
-              </h3>
-              <Link href="/rankings" className="flex items-center gap-1 text-sm text-indigo-600 font-medium hover:underline">
-                전체보기 <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-              {isLoading
-                ? Array.from({ length: 6 }).map((_, i) => <BookCardSkeleton key={i} />)
-                : books.slice(3, 9).map((book) => (
-                  <BookCard
-                    key={book.itemId}
-                    book={book}
-                    category={book.categoryName?.split('>').pop()?.trim()}
-                  />
-                ))
-              }
-            </div>
-          </section>
-
-          {/* 베스트셀러 순위 섹션 */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
-            <HomeBestseller />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-10 border border-gray-100">
+        
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-5 shadow-lg shadow-blue-200 text-white">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
           </div>
-
+          <h1 className="text-2xl font-bold text-gray-900">독서 클럽</h1>
         </div>
-      </main>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {!isLogin && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1 ml-1 uppercase">Name</label>
+              <input 
+                name="name"
+                type="text" 
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="실명을 입력하세요"
+                className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white transition outline-none text-black"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-1 ml-1 uppercase">ID (Email)</label>
+            <input 
+              name="email"
+              type="text" 
+              required
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="아이디 또는 이메일"
+              className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white transition outline-none text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 mb-1 ml-1 uppercase">Password</label>
+            <input 
+              name="password"
+              type="password" 
+              required
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white transition outline-none text-black"
+            />
+          </div>
+
+          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 transition transform active:scale-[0.97] mt-6">
+            {isLogin ? "로그인" : "회원가입 완료"}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <button 
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-blue-600 font-bold hover:underline"
+          >
+            {isLogin ? "계정이 없으신가요? 회원가입" : "이미 계정이 있으신가요? 로그인"}
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default AuthPage;
