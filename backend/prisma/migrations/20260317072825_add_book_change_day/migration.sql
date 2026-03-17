@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `clubs` ADD COLUMN `bookChangeDay` INTEGER NOT NULL DEFAULT 1;
