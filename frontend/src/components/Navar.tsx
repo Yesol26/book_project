@@ -11,7 +11,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const navItems = [
-    { name: '메인 홈', href: '/' },
+    { name: '메인 홈', href: '/main' },
     { name: '도서 순위', href: '/rankings' },
     { name: '도서 검색', href: '/search' },
     { name: '내 서재', href: '/recordBook' },
@@ -35,7 +35,7 @@ export default function Navbar() {
     <nav className="h-16 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[50] px-8 flex items-center justify-between">
       {/* 1. 로고 영역 */}
       <div className="flex items-center gap-10">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/main" className="flex items-center gap-2 group">
           <div className="bg-indigo-600 p-1.5 rounded-lg group-hover:bg-indigo-700 transition-colors">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
