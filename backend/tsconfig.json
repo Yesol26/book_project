@@ -11,7 +11,13 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["node"]
+    "types": ["node"],
+     // --- 추가할 부분 시작 ---
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+    // --- 추가할 부분 끝 ---
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
