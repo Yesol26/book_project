@@ -27,6 +27,7 @@ model User {
   clubComments  ClubComment[]
   chatMessages  ChatMessage[]
   clubRecords   ClubRecord[]
+  reviews       Review[]
 
   @@map("users")
 }
@@ -240,4 +241,23 @@ model ClubRecord {
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("club_records")
+}
+
+// prisma/schema.prisma 파일에 추가
+
+model Review {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title    String
+  content  String
+  rating   Int
+  
+  bookTitle  String
+  bookAuthor String
+
+  // User 모델과 관계 설정
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 }

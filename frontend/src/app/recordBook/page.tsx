@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle, X } from 'lucide-react';
+import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle, X, Heart } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { useWishlist } from '@/contexts/WishlistContext';
 import Sidebar from '@/components/Sidebar';
 
 // --- 가짜 데이터 (Statistics) ---
@@ -54,14 +55,23 @@ const ReadingGrass = () => {
 };
 
 // --- 2. 도서 카드 컴포넌트 (5순위: 별점 보라색으로 통일) ---
-const MyBookCard = ({ title, author, rating, onReviewClick }: { title: string; author: string; rating: number; onReviewClick?: () => void }) => (
+const MyBookCard = ({ title, author, rating, isWishlist, onToggleWishlist, onReviewClick }: { title: string; author: string; rating: number; isWishlist?: boolean; onToggleWishlist?: () => void; onReviewClick?: () => void }) => (
   <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
     {/* [6순위] 책 모양 효과: BookCard/HomeBestseller와 동일한 스타일 */}
     <div
-      className="aspect-[3/4] bg-gray-100 rounded-r-md mb-3 flex items-center justify-center text-gray-400 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1"
+      className="aspect-[3/4] bg-gray-100 rounded-r-md mb-3 flex items-center justify-center text-gray-400 relative overflow-hidden transition-transform duration-200 hover:-translate-y-1 group"
       style={{ boxShadow: '-3px 4px 12px rgba(0,0,0,0.25)' }}
     >
       Book Cover
+      {/* 하트 버튼 (마우스 오버 시 표시) */}
+      {onToggleWishlist && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleWishlist(); }}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+        >
+          <Heart className={`w-4 h-4 ${isWishlist ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'}`} />
+        </button>
+      )}
     </div>
     <div className="space-y-1">
       <h4 className="text-sm font-bold text-gray-900 truncate">{title}</h4>
@@ -118,11 +128,59 @@ export default function MyLibrary() {
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
 
-  const [reviews, setReviews] = useState([
-    { title: "가재가 노래하는 곳", author: "델리아 오언", rating: 5, review: "마지막 페이지를 덮는 순간, 자연과 인간의 경계에서 펼쳐지는 강렬한 생존의 이야기에 깊은 감동을 받았습니다. 주인공 카이아의 삶은..." },
-    { title: "물고기는 존재하지 않는다", author: "룰루 밀러", rating: 4, review: "단순한 과학 서적을 넘어, 혼돈 속에서 질서를 찾으려는 인간의 열망과 집념에 대한 철학적인 질문을 던지는 책입니다. 데이비드 스타 조던의 삶을 통해..." },
-    { title: "미드나잇 라이브러리", author: "매트 헤이그", rating: 5, review: "'만약 다른 선택을 했다면 어땠을까?'라는 상상에서 출발하는 이 소설은, 후회와 선택의 의미를 다시금 생각하게 만듭니다. 주인공 노라가..." }
-  ]);
+  const [userName, setUserName] = useState<string>('');
+
+  const { wishlist, toggleWishlist, isWishlisted } = useWishlist();
+
+  // 독서 기록함 상태
+  const [historyBooks, setHistoryBooks] = useState<{ title: string; author: string; rating: number }[]>([]);
+
+  const [reviews, setReviews] = useState<{ title: string; author: string; rating: number; review: string }[]>([]);
+
+  // 백엔드에서 내 리뷰 목록을 불러오는 함수
+  const fetchMyReviews = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const res = await fetch(`${apiUrl}/reviews/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // 백엔드 필드명(content)을 프론트엔드 prop(review)에 맞게 매핑
+        setReviews(data.map((r: any) => ({ ...r, review: r.content })));
+      }
+    } catch (error) {
+      console.error("리뷰 목록 로딩 실패:", error);
+    }
+  };
+
+  // 백엔드에서 사용자 정보를 불러오는 함수
+  const fetchUserInfo = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const res = await fetch(`${apiUrl}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.name) setUserName(data.name);
+      }
+    } catch (error) {
+      console.error("사용자 정보 로딩 실패:", error);
+    }
+  };
+
+  // 페이지 로드 시 내 리뷰 목록 불러오기
+  useEffect(() => {
+    fetchUserInfo();
+    fetchMyReviews();
+  }, []);
 
   const closeReviewModal = () => {
     setReviewModalBook(null);
@@ -157,26 +215,25 @@ export default function MyLibrary() {
         content: reviewContent,
       };
 
-      // TODO: 백엔드 API(예: POST /api/reviews)가 만들어지면 fetch 로직으로 변경하세요.
-      /*
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-      const res = await fetch(`${apiUrl}/reviews`, { ... });
-      */
-
-      setReviews((prev) => [
-        {
-          title: payload.bookTitle || '',
-          author: payload.bookAuthor || '',
-          rating: payload.rating,
-          review: payload.content,
+      const res = await fetch(`${apiUrl}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        ...prev,
-      ]);
+        body: JSON.stringify(payload),
+      });
 
-      console.log('백엔드로 전송될 데이터:', payload); // 임시 확인용
-      alert('리뷰가 성공적으로 등록되었습니다!');
-      closeReviewModal();
-      setActiveTab('reviews');
+      if (res.ok) {
+        alert('리뷰가 성공적으로 등록되었습니다!');
+        closeReviewModal();
+        setActiveTab('reviews');
+        fetchMyReviews(); // 리뷰 목록 새로고침
+      } else {
+        const errorData = await res.json();
+        throw new Error(errorData.message || '리뷰 등록에 실패했습니다.');
+      }
     } catch (error: any) {
       console.error('리뷰 등록 중 오류 발생:', error);
       alert(error.message || '서버와 통신 중 오류가 발생했습니다.');
@@ -193,7 +250,9 @@ export default function MyLibrary() {
         {/* 상단 프로필 헤더 */}
         <header className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">예솔님의 서재</h1>
+            <h1 className="text-2xl font-black text-gray-900">
+              {userName ? `${userName}님의 서재` : '나의 서재'}
+            </h1>
             <p className="text-gray-500 text-sm mt-1">올해 벌써 24권의 책을 읽으셨네요! 👏</p>
           </div>
           <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
@@ -301,29 +360,66 @@ export default function MyLibrary() {
               {/* 1. 독서 기록함 탭 내용 */}
               <div className="w-1/3 pr-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pb-4">
-                  <MyBookCard title="가재가 노래하는 곳" author="델리아 오언" rating={5} onReviewClick={() => setReviewModalBook({ title: '가재가 노래하는 곳', author: '델리아 오언' })} />
-                  <MyBookCard title="물고기는 존재하지 않는다" author="룰루 밀러" rating={4} onReviewClick={() => setReviewModalBook({ title: '물고기는 존재하지 않는다', author: '룰루 밀러' })} />
-                  <MyBookCard title="미드나잇 라이브러리" author="매트 헤이그" rating={5} onReviewClick={() => setReviewModalBook({ title: '미드나잇 라이브러리', author: '매트 헤이그' })} />
-                  <MyBookCard title="지구 끝의 온기" author="김초엽" rating={4} onReviewClick={() => setReviewModalBook({ title: '지구 끝의 온기', author: '김초엽' })} />
+                  {historyBooks.length > 0 ? (
+                    historyBooks.map((book, idx) => (
+                      <MyBookCard
+                        key={idx}
+                        title={book.title}
+                        author={book.author}
+                        rating={book.rating}
+                        isWishlist={isWishlisted(book.title)} // API 연동 전이라 임시로 title을 ID로 사용
+                        onToggleWishlist={() => toggleWishlist({
+                          itemId: book.title, // API 연동 전이라 임시로 title을 ID로 사용
+                          title: book.title,
+                          author: book.author,
+                          cover: '' // 실제 데이터에서는 커버 이미지 URL 필요
+                        })}
+                        onReviewClick={() => setReviewModalBook({ title: book.title, author: book.author })}
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full py-10 text-center text-gray-400 text-sm">
+                      독서 기록함에 담긴 책이 없습니다.
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* 2. 위시리스트 탭 내용 */}
               <div className="w-1/3 pr-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pb-4">
-                  <MyBookCard title="모순" author="양귀자" rating={0} onReviewClick={() => setReviewModalBook({ title: '모순', author: '양귀자' })} />
-                  <MyBookCard title="코스모스" author="칼 세이건" rating={0} onReviewClick={() => setReviewModalBook({ title: '코스모스', author: '칼 세이건' })} />
-                  <MyBookCard title="사피엔스" author="유발 하라리" rating={0} onReviewClick={() => setReviewModalBook({ title: '사피엔스', author: '유발 하라리' })} />
-                  <MyBookCard title="이기적 유전자" author="리처드 도킨스" rating={0} onReviewClick={() => setReviewModalBook({ title: '이기적 유전자', author: '리처드 도킨스' })} />
+                  {wishlist.length > 0 ? (
+                    wishlist.map((book, idx) => (
+                      <MyBookCard
+                        key={String(book.itemId)}
+                        title={book.title}
+                        author={book.author}
+                        rating={0} // 위시리스트의 책은 별점이 없습니다.
+                        isWishlist={true}
+                        onToggleWishlist={() => toggleWishlist(book)}
+                        onReviewClick={() => setReviewModalBook({ title: book.title, author: book.author })} // 위시리스트 책도 리뷰 작성 가능
+                      />
+                    ))
+                  ) : (
+                    <div className="col-span-full py-10 text-center text-gray-400 text-sm">
+                      위시리스트에 담긴 책이 없습니다.
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* 3. 작성한 리뷰 탭 내용 */}
               <div className="w-1/3 pr-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
-                  {reviews.map((r, idx) => (
-                    <MyReviewCard key={idx} title={r.title} author={r.author} rating={r.rating} review={r.review} />
-                  ))}
+                  {reviews.length > 0 ? (
+                    reviews.map((r, idx) => (
+                      <MyReviewCard key={idx} title={r.title} author={r.author} rating={r.rating} review={r.review} />
+                    ))
+                  ) : (
+                    <div className="col-span-full py-10 text-center text-gray-400 text-sm">
+                      작성한 리뷰가 없습니다.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -2,17 +2,18 @@
 
 import React, { useState, KeyboardEvent } from 'react';
 import Image from 'next/image';
-import { Search, Menu, ChevronRight } from 'lucide-react';
+import { Search, Menu, ChevronRight, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import HomeBestseller from '@/components/books/HomeBestseller';
 import { useBestsellers } from '@/hooks/queries/useBooks';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { getHighQualityCover } from '@/lib/utils/image';
 import { AladinBook } from '../../../../types/aladin';
 
 // --- 서브 컴포넌트: 도서 카드 (실제 API 데이터) ---
-const BookCard = ({ book, category }: { book: AladinBook; category?: string }) => {
+const BookCard = ({ book, category, isWishlisted, onToggleWishlist }: { book: AladinBook; category?: string; isWishlisted: boolean; onToggleWishlist: () => void; }) => {
   const coverUrl = getHighQualityCover(book.cover);
   return (
     <div className="w-[160px] flex-shrink-0 group cursor-pointer">
@@ -38,6 +39,13 @@ const BookCard = ({ book, category }: { book: AladinBook; category?: string }) =
             {category}
           </span>
         )}
+        {/* 하트 버튼 */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleWishlist(); }}
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+        >
+          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'}`} />
+        </button>
       </div>
       <h4 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{book.title}</h4>
       <p className="text-xs text-gray-500 mt-1 line-clamp-1">{book.author}</p>
@@ -102,6 +110,7 @@ const HeroBookStack = ({ books }: { books: AladinBook[] }) => {
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const { isWishlisted, toggleWishlist } = useWishlist();
 
   // 베스트셀러 훅 — 히어로 배너 + "내가 읽고 있는 책" 공용
   const { data: bestsellers, isLoading } = useBestsellers(1, 'Book');
@@ -173,6 +182,13 @@ export default function Home() {
                     key={book.itemId}
                     book={book}
                     category={book.categoryName?.split('>').pop()?.trim()}
+                    isWishlisted={isWishlisted(book.itemId)}
+                    onToggleWishlist={() => toggleWishlist({
+                      itemId: book.itemId,
+                      title: book.title,
+                      author: book.author,
+                      cover: book.cover
+                    })}
                   />
                 ))
               }
@@ -198,6 +214,13 @@ export default function Home() {
                     key={book.itemId}
                     book={book}
                     category={book.categoryName?.split('>').pop()?.trim()}
+                    isWishlisted={isWishlisted(book.itemId)}
+                    onToggleWishlist={() => toggleWishlist({
+                      itemId: book.itemId,
+                      title: book.title,
+                      author: book.author,
+                      cover: book.cover
+                    })}
                   />
                 ))
               }

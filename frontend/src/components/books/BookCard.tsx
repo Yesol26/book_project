@@ -1,12 +1,15 @@
 import Image from 'next/image';
+import { Heart } from 'lucide-react';
 import { AladinBook } from '../../../../types/aladin';
 import { getHighQualityCover } from '@/lib/utils/image';
 
 interface BookCardProps {
     book: AladinBook;
+    isWishlisted?: boolean;
+    onToggleWishlist?: () => void;
 }
 
-export default function BookCard({ book }: BookCardProps) {
+export default function BookCard({ book, isWishlisted, onToggleWishlist }: BookCardProps) {
     const coverUrl = getHighQualityCover(book.cover);
 
     return (
@@ -33,6 +36,16 @@ export default function BookCard({ book }: BookCardProps) {
                         </div>
                     )}
                 </div>
+
+                {/* 하트 버튼 (마우스 오버 시 표시) */}
+                {onToggleWishlist && (
+                    <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleWishlist(); }}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
+                    >
+                        <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'}`} />
+                    </button>
+                )}
             </div>
 
             {/* 정보 */}

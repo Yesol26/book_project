@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { QueryProvider } from '@/providers/QueryProvider';
+import { WishlistProvider } from '@/contexts/WishlistContext';
 import Navbar from '@/components/Navar';
 import './globals.css';
 
@@ -19,11 +20,13 @@ export default function RootLayout({
     <html lang="ko">
       <body className="flex flex-col min-h-screen bg-[#F8FAFC]">
         <QueryProvider>
-          {/* showNavbar가 true일 때만 배너가 나옵니다 */}
-          {showNavbar && <Navbar />}
-          <main className="flex-1 flex flex-col">
-            {children}
-          </main>
+          <WishlistProvider>
+            {/* showNavbar가 true일 때만 배너가 나옵니다 */}
+            {showNavbar && <Navbar />}
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </WishlistProvider>
         </QueryProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useWishlist } from '@/contexts/WishlistContext';
 import BookCard from './BookCard';
 import { AladinBook } from '../../../../types/aladin';
 
@@ -27,6 +28,7 @@ function SkeletonCard() {
 export default function BookList({
     books, isLoading, page, totalPages, total, onPageChange
 }: BookListProps) {
+    const { isWishlisted, toggleWishlist } = useWishlist();
 
     if (isLoading) {
         return (
@@ -63,7 +65,17 @@ export default function BookList({
             {/* 7열 그리드, gap 좁게 */}
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-x-3 gap-y-6">
                 {books.map((book) => (
-                    <BookCard key={book.itemId} book={book} />
+                    <BookCard
+                        key={book.itemId}
+                        book={book}
+                        isWishlisted={isWishlisted(book.itemId)}
+                        onToggleWishlist={() => toggleWishlist({
+                            itemId: book.itemId,
+                            title: book.title,
+                            author: book.author,
+                            cover: book.cover
+                        })}
+                    />
                 ))}
             </div>
 
@@ -110,7 +122,7 @@ export default function BookList({
                         disabled={page === totalPages}
                         className="px-3 py-2 text-sm text-gray-400 hover:text-gray-700 disabled:opacity-30 transition-colors"
                     >
-                        마지막
+                        끝
                     </button>
                 </div>
             )}
