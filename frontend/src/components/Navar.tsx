@@ -1,22 +1,52 @@
 "use client";
 
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, useEffect, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BookOpen, Search, Bell, User } from 'lucide-react';
+
+const navItems = [
+  { name: '메인 홈', href: '/main' },
+  { name: '도서 순위', href: '/rankings' },
+  { name: '도서 검색', href: '/search' },
+  { name: '내 서재', href: '/recordBook' },
+  { name: '모임 활동', href: '/groups' },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [userName, setUserName] = useState<string | null>(null);
 
-  const navItems = [
-    { name: '메인 홈', href: '/' },
-    { name: '도서 순위', href: '/rankings' },
-    { name: '도서 검색', href: '/search' },
-    { name: '내 서재', href: '/recordBook' },
-    { name: '모임 활동', href: '/groups' },
-  ];
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+        const res = await fetch(`${apiUrl}/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          if (data.name) setUserName(data.name);
+        }
+      } catch (error) {
+        console.error('사용자 정보를 불러오는데 실패했습니다:', error);
+      }
+    };
+
+    fetchUser();
+
+    // 프로필 업데이트 신호를 받으면 이름을 다시 불러옵니다.
+    window.addEventListener('profileUpdated', fetchUser);
+    return () => window.removeEventListener('profileUpdated', fetchUser);
+  }, []);
 
   const handleSearch = () => {
     const trimmed = searchQuery.trim();
@@ -35,7 +65,7 @@ export default function Navbar() {
     <nav className="h-16 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-[50] px-8 flex items-center justify-between">
       {/* 1. 로고 영역 */}
       <div className="flex items-center gap-10">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/main" className="flex items-center gap-2 group">
           <div className="bg-indigo-600 p-1.5 rounded-lg group-hover:bg-indigo-700 transition-colors">
             <BookOpen className="w-6 h-6 text-white" />
           </div>
@@ -87,14 +117,14 @@ export default function Navbar() {
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>
         <div className="h-8 w-[1px] bg-gray-200 mx-1 hidden sm:block" />
-        <div className="flex items-center gap-3 cursor-pointer group">
+        <Link href="/profile" className="flex items-center gap-3 cursor-pointer group">
           <div className="w-8 h-8 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white shadow-sm group-hover:shadow-md transition-all">
             <User className="w-4 h-4" />
           </div>
           <span className="text-sm font-semibold text-gray-700 hidden sm:block group-hover:text-indigo-600 transition-colors">
-            예솔님
+            {userName ? `${userName}님` : '로딩중...'}
           </span>
-        </div>
+        </Link>
       </div>
     </nav>
   );

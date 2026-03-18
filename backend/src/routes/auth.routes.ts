@@ -31,6 +31,7 @@ router.post('/login', authController.login);
 // 3. 내 정보 조회: 반드시 로그증(authMiddleware)이 필요함
 // GET /api/auth/me
 router.get('/me', authMiddleware, authController.me);
+router.put('/me', authMiddleware, authController.updateProfile);
 
 // 4. 로그아웃 (선택사항)
 router.post('/logout', authController.logout);

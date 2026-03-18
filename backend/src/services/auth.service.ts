@@ -100,4 +100,28 @@ export const authService = {
     if (!user) throw new Error('사용자를 찾을 수 없습니다.');
     return user;
   },
+
+  // 프로필 업데이트
+  updateProfile: async (userId: string, data: any) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('사용자를 찾을 수 없습니다.');
+
+    const updateData: any = { name: data.name };
+
+    if (data.currentPassword && data.newPassword) {
+      const isMatch = await bcrypt.compare(data.currentPassword, user.password);
+      if (!isMatch) {
+        throw new Error('현재 비밀번호가 일치하지 않습니다.');
+      }
+      updateData.password = await bcrypt.hash(data.newPassword, 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: { id: true, email: true, name: true }, // 비밀번호 제외하고 반환
+    });
+
+    return updatedUser;
+  },
 };

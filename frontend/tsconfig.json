@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "../backend/src/routes/review.routes.ts", "../backend/src/controllers/review.controller.ts", "../backend/src/services/review.service.ts"  ],
   "exclude": ["node_modules"]
 }

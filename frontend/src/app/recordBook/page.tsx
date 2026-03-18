@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Book, Calendar, Star, ChevronRight, BarChart3, PlusCircle, X } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import Sidebar from '@/components/Sidebar';
 
@@ -13,7 +13,12 @@ const monthlyData = [
 
 // --- 1. 독서 잔디밭 컴포넌트 ---
 const ReadingGrass = () => {
-  const grassData = Array.from({ length: 150 }, () => Math.floor(Math.random() * 4));
+  // 초기 렌더링(서버 및 첫 클라이언트 렌더) 시에는 모두 0(회색)으로 맞춥니다.
+  const [grassData, setGrassData] = useState<number[]>(Array.from({ length: 150 }, () => 0));
+
+  useEffect(() => {
+    setGrassData(Array.from({ length: 150 }, () => Math.floor(Math.random() * 4)));
+  }, []);
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -49,7 +54,7 @@ const ReadingGrass = () => {
 };
 
 // --- 2. 도서 카드 컴포넌트 (5순위: 별점 보라색으로 통일) ---
-const MyBookCard = ({ title, author, rating }: { title: string; author: string; rating: number }) => (
+const MyBookCard = ({ title, author, rating, onReviewClick }: { title: string; author: string; rating: number; onReviewClick?: () => void }) => (
   <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
     {/* [6순위] 책 모양 효과: BookCard/HomeBestseller와 동일한 스타일 */}
     <div
@@ -67,8 +72,38 @@ const MyBookCard = ({ title, author, rating }: { title: string; author: string; 
           <Star key={i} className={`w-3 h-3 ${i < rating ? 'fill-indigo-500 text-indigo-500' : 'text-gray-200'}`} />
         ))}
       </div>
-      <button className="w-full mt-3 py-2 bg-gray-50 hover:bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-lg transition-colors border border-indigo-100">
+      <button 
+        onClick={onReviewClick}
+        className="w-full mt-3 py-2 bg-gray-50 hover:bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-lg transition-colors border border-indigo-100"
+      >
         리뷰 작성하기
+      </button>
+    </div>
+  </div>
+);
+
+// --- 3. 리뷰 카드 컴포넌트 ---
+const MyReviewCard = ({ title, author, rating, review }: { title: string; author: string; rating: number; review: string }) => (
+  <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex gap-5 hover:shadow-md transition-shadow">
+    <div
+      className="aspect-[3/4] w-20 flex-shrink-0 bg-gray-100 rounded-r-md flex items-center justify-center text-gray-400 relative overflow-hidden"
+      style={{ boxShadow: '-3px 4px 12px rgba(0,0,0,0.2)' }}
+    >
+      Book Cover
+    </div>
+    <div className="flex-1 min-w-0">
+      <h4 className="text-sm font-bold text-gray-900 truncate">{title}</h4>
+      <p className="text-xs text-gray-500 mb-2">{author}</p>
+      <div className="flex items-center gap-1 mb-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star key={i} className={`w-3 h-3 ${i < rating ? 'fill-indigo-500 text-indigo-500' : 'text-gray-200'}`} />
+        ))}
+      </div>
+      <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
+        {review}
+      </p>
+      <button className="mt-3 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors">
+        전체 보기 &rarr;
       </button>
     </div>
   </div>
@@ -76,6 +111,78 @@ const MyBookCard = ({ title, author, rating }: { title: string; author: string; 
 
 // --- 메인 서재 페이지 컴포넌트 ---
 export default function MyLibrary() {
+  const [activeTab, setActiveTab] = useState<'history' | 'wishlist' | 'reviews'>('history');
+  const [reviewModalBook, setReviewModalBook] = useState<{ title: string; author: string } | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewContent, setReviewContent] = useState('');
+
+  const [reviews, setReviews] = useState([
+    { title: "가재가 노래하는 곳", author: "델리아 오언", rating: 5, review: "마지막 페이지를 덮는 순간, 자연과 인간의 경계에서 펼쳐지는 강렬한 생존의 이야기에 깊은 감동을 받았습니다. 주인공 카이아의 삶은..." },
+    { title: "물고기는 존재하지 않는다", author: "룰루 밀러", rating: 4, review: "단순한 과학 서적을 넘어, 혼돈 속에서 질서를 찾으려는 인간의 열망과 집념에 대한 철학적인 질문을 던지는 책입니다. 데이비드 스타 조던의 삶을 통해..." },
+    { title: "미드나잇 라이브러리", author: "매트 헤이그", rating: 5, review: "'만약 다른 선택을 했다면 어땠을까?'라는 상상에서 출발하는 이 소설은, 후회와 선택의 의미를 다시금 생각하게 만듭니다. 주인공 노라가..." }
+  ]);
+
+  const closeReviewModal = () => {
+    setReviewModalBook(null);
+    setReviewRating(0);
+    setHoverRating(0);
+    setReviewTitle('');
+    setReviewContent('');
+  };
+
+  const handleSubmitReview = async () => {
+    if (reviewRating === 0) {
+      alert('별점을 선택해주세요.');
+      return;
+    }
+    if (!reviewTitle.trim() || !reviewContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("로그인이 필요합니다.");
+        return;
+      }
+
+      const payload = {
+        bookTitle: reviewModalBook?.title,
+        bookAuthor: reviewModalBook?.author,
+        rating: reviewRating,
+        title: reviewTitle,
+        content: reviewContent,
+      };
+
+      // TODO: 백엔드 API(예: POST /api/reviews)가 만들어지면 fetch 로직으로 변경하세요.
+      /*
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const res = await fetch(`${apiUrl}/reviews`, { ... });
+      */
+
+      setReviews((prev) => [
+        {
+          title: payload.bookTitle || '',
+          author: payload.bookAuthor || '',
+          rating: payload.rating,
+          review: payload.content,
+        },
+        ...prev,
+      ]);
+
+      console.log('백엔드로 전송될 데이터:', payload); // 임시 확인용
+      alert('리뷰가 성공적으로 등록되었습니다!');
+      closeReviewModal();
+      setActiveTab('reviews');
+    } catch (error: any) {
+      console.error('리뷰 등록 중 오류 발생:', error);
+      alert(error.message || '서버와 통신 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <div className="flex flex-1">
       {/* 사이드바 */}
@@ -163,20 +270,145 @@ export default function MyLibrary() {
         <ReadingGrass />
 
         {/* 하단: 독서 기록함 / 위시리스트 탭 */}
-        <section>
+        <section className="overflow-hidden">
           <div className="flex gap-6 border-b border-gray-100 mb-6">
-            <button className="pb-4 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">독서 기록함</button>
-            <button className="pb-4 text-sm font-medium text-gray-400 hover:text-gray-600">위시리스트</button>
+            <button 
+              onClick={() => setActiveTab('history')}
+              className={`pb-4 text-sm font-bold transition-all ${activeTab === 'history' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              독서 기록함
+            </button>
+            <button 
+              onClick={() => setActiveTab('wishlist')}
+              className={`pb-4 text-sm font-bold transition-all ${activeTab === 'wishlist' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              위시리스트
+            </button>
+            <button 
+              onClick={() => setActiveTab('reviews')}
+              className={`pb-4 text-sm font-bold transition-all ${activeTab === 'reviews' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              작성한 리뷰
+            </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-            <MyBookCard title="가재가 노래하는 곳" author="델리아 오언" rating={5} />
-            <MyBookCard title="물고기는 존재하지 않는다" author="룰루 밀러" rating={4} />
-            <MyBookCard title="미드나잇 라이브러리" author="매트 헤이그" rating={5} />
-            <MyBookCard title="지구 끝의 온기" author="김초엽" rating={4} />
+
+          {/* 슬라이딩 컨테이너 */}
+          <div className="w-full relative">
+            <div 
+              className="flex w-[300%] transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${activeTab === 'history' ? 0 : activeTab === 'wishlist' ? 33.3333 : 66.6666}%)` }}
+            >
+              {/* 1. 독서 기록함 탭 내용 */}
+              <div className="w-1/3 pr-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pb-4">
+                  <MyBookCard title="가재가 노래하는 곳" author="델리아 오언" rating={5} onReviewClick={() => setReviewModalBook({ title: '가재가 노래하는 곳', author: '델리아 오언' })} />
+                  <MyBookCard title="물고기는 존재하지 않는다" author="룰루 밀러" rating={4} onReviewClick={() => setReviewModalBook({ title: '물고기는 존재하지 않는다', author: '룰루 밀러' })} />
+                  <MyBookCard title="미드나잇 라이브러리" author="매트 헤이그" rating={5} onReviewClick={() => setReviewModalBook({ title: '미드나잇 라이브러리', author: '매트 헤이그' })} />
+                  <MyBookCard title="지구 끝의 온기" author="김초엽" rating={4} onReviewClick={() => setReviewModalBook({ title: '지구 끝의 온기', author: '김초엽' })} />
+                </div>
+              </div>
+
+              {/* 2. 위시리스트 탭 내용 */}
+              <div className="w-1/3 pr-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pb-4">
+                  <MyBookCard title="모순" author="양귀자" rating={0} onReviewClick={() => setReviewModalBook({ title: '모순', author: '양귀자' })} />
+                  <MyBookCard title="코스모스" author="칼 세이건" rating={0} onReviewClick={() => setReviewModalBook({ title: '코스모스', author: '칼 세이건' })} />
+                  <MyBookCard title="사피엔스" author="유발 하라리" rating={0} onReviewClick={() => setReviewModalBook({ title: '사피엔스', author: '유발 하라리' })} />
+                  <MyBookCard title="이기적 유전자" author="리처드 도킨스" rating={0} onReviewClick={() => setReviewModalBook({ title: '이기적 유전자', author: '리처드 도킨스' })} />
+                </div>
+              </div>
+
+              {/* 3. 작성한 리뷰 탭 내용 */}
+              <div className="w-1/3 pr-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-4">
+                  {reviews.map((r, idx) => (
+                    <MyReviewCard key={idx} title={r.title} author={r.author} rating={r.rating} review={r.review} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
       </main>
+
+      {/* 리뷰 작성 모달 팝업 */}
+      {reviewModalBook && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h2 className="text-lg font-bold text-gray-800">새 리뷰 작성</h2>
+              <button 
+                onClick={closeReviewModal} 
+                className="text-gray-400 hover:text-gray-600 transition-colors bg-white p-1 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* 책 정보 표시 영역 */}
+              <div className="flex gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div className="w-12 h-16 bg-gray-200 rounded shadow-sm flex-shrink-0 overflow-hidden" />
+                <div>
+                  <p className="text-[10px] font-bold text-indigo-600 mb-0.5">선택된 도서</p>
+                  <h3 className="font-bold text-gray-900 line-clamp-1">{reviewModalBook.title}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{reviewModalBook.author}</p>
+                </div>
+              </div>
+
+              {/* 입력 폼 영역 */}
+              <div className="space-y-4">
+                {/* 별점 선택 영역 */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 ml-1">나의 별점</label>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const starValue = i + 1;
+                      return (
+                        <Star
+                          key={i}
+                          className={`w-8 h-8 cursor-pointer transition-colors ${
+                            starValue <= (hoverRating || reviewRating) ? 'fill-indigo-500 text-indigo-500' : 'text-gray-200'
+                          }`}
+                          onMouseEnter={() => setHoverRating(starValue)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setReviewRating(starValue)}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 ml-1">한 줄 제목</label>
+                  <input 
+                    type="text" 
+                    value={reviewTitle}
+                    onChange={(e) => setReviewTitle(e.target.value)}
+                    placeholder="리뷰의 핵심을 한 줄로 적어주세요." 
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-2 ml-1">나의 평가</label>
+                  <textarea 
+                    rows={5} 
+                    value={reviewContent}
+                    onChange={(e) => setReviewContent(e.target.value)}
+                    placeholder="책을 읽고 느낀 점을 자유롭게 남겨주세요." 
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none" 
+                  />
+                </div>
+              </div>
+
+              {/* 하단 버튼 */}
+              <div className="pt-2 flex gap-3">
+                <button onClick={closeReviewModal} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition-colors">취소</button>
+                <button onClick={handleSubmitReview} className="flex-1 py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">등록하기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

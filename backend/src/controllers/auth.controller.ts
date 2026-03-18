@@ -87,6 +87,22 @@ export const authController = {
         }
     },
 
+    // 프로필 업데이트 (이름, 비밀번호 변경)
+    updateProfile: async (req: AuthRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.userId;
+            if (!userId) {
+                res.status(401).json({ message: '인증되지 않은 사용자입니다.' });
+                return;
+            }
+
+            const updatedUser = await authService.updateProfile(userId, req.body);
+            res.status(200).json({ message: '프로필이 업데이트되었습니다.', user: updatedUser });
+        } catch (error: any) {
+            res.status(400).json({ message: error.message });
+        }
+    },
+
     // 로그아웃
     logout: async (req: Request, res: Response): Promise<void> => {
         // 보통 JWT는 클라이언트(브라우저)에서 토큰을 삭제하면 로그아웃됩니다.
