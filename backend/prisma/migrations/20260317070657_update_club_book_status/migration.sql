@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `club_books` ADD COLUMN `completedAt` DATETIME(3) NULL,
+    ADD COLUMN `isCompleted` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `status` ENUM('READING', 'COMPLETED', 'EXPIRED') NOT NULL DEFAULT 'READING',
+    MODIFY `endDate` DATETIME(3) NULL;

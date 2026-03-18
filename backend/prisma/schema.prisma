@@ -26,6 +26,7 @@ model User {
   clubPosts     ClubPost[]
   clubComments  ClubComment[]
   chatMessages  ChatMessage[]
+  clubRecords   ClubRecord[]
 
   @@map("users")
 }
@@ -96,13 +97,20 @@ model Club {
   name        String
   description String   @db.Text
   coverImage  String?
-  creatorId   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  capacity      Int      @default(20)
+  meetingDay    String?
+  meetingDayOfWeek String?  // e.g. "0,2,4" for Sun, Tue, Thu
+  meetingTime   String?     // "19:00"
+  color         String?     // Hex color code matching preset calendar colors
+  bookChangeDay Int      @default(1)
+  creatorId     String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   members     ClubMember[]
   books       ClubBook[]
   posts       ClubPost[]
+  records     ClubRecord[]
   schedules   ClubSchedule[]
   chatMessages ChatMessage[]
 
@@ -134,10 +142,13 @@ model ClubBook {
   id        String       @id @default(uuid())
   clubId    String
   bookId    String
-  type      ClubBookType
-  startDate DateTime
-  endDate   DateTime
-  createdAt DateTime     @default(now())
+  type        ClubBookType
+  startDate   DateTime
+  endDate     DateTime?
+  isCompleted Boolean        @default(false)
+  completedAt DateTime?
+  status      ClubBookStatus @default(READING)
+  createdAt   DateTime       @default(now())
 
   club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
   book      Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
@@ -148,6 +159,12 @@ model ClubBook {
 enum ClubBookType {
   MONTHLY
   WEEKLY
+}
+
+enum ClubBookStatus {
+  READING
+  COMPLETED
+  EXPIRED
 }
 
 // 토론 게시판
@@ -207,4 +224,20 @@ model ChatMessage {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
+}
+
+// 모임 기록
+model ClubRecord {
+  id        String   @id @default(uuid())
+  clubId    String
+  authorId  String
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("club_records")
 }
